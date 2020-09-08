@@ -6,5 +6,5 @@
  * INTERNAL: Do not use.
  */
 module Internal {
-  import semmle.code.csharp.dataflow.internal.rangeanalysis.SsaReadPositionCommon
+  import semmle.code.java.dataflow.internal.rangeanalysis.SsaReadPositionCommon
 }

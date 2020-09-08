@@ -6,6 +6,7 @@
 
 import java
 private import SSA
+private import SsaReadPosition::Internal
 private import RangeUtils
 private import semmle.code.java.controlflow.Guards
 import Bound
