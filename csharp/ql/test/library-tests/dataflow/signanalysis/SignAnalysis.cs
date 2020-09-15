@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Diagnostics;
 
 class SignAnalysis
 {
@@ -152,7 +153,18 @@ class SignAnalysis
             return y; // strictly positive
         }
 
+        if (y is -1)
+        {
+            return y; // strictly negative [MISSING]
+        }
+
         if (x < y)
+        {
+            return y; // strictly positive
+        }
+
+        var b = y == 1;
+        if (b)
         {
             return y; // strictly positive
         }
@@ -272,6 +284,15 @@ class SignAnalysis
             }
             System.Console.WriteLine(k); // any
         }
+    }
+
+    void Assert(int i, bool b)
+    {
+        Debug.Assert(i > 0);
+        System.Console.WriteLine(i); // strictly positive
+
+        if (b)
+            System.Console.WriteLine(i); // strictly positive
     }
 }
 
