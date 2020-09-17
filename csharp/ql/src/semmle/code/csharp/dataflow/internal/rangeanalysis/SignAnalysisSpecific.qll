@@ -2,40 +2,45 @@
  * Provides C#-specific definitions for use in sign analysis.
  */
 module Private {
-  import csharp
-  import RangeUtils
   import ConstantUtils
   import SsaUtils
-  private import Ssa
+  import csharp
+  import Ssa
   private import SsaReadPositionCommon
   private import semmle.code.csharp.controlflow.Guards as G
   private import Linq.Helpers as Linq
-  private import Sign::Internal
+  private import Sign
   private import SignAnalysisCommon
+  private import semmle.code.csharp.commons.ComparisonTest
+
+  private class BooleanValue = G::AbstractValues::BooleanValue;
 
   class CharacterLiteral = CharLiteral;
 
   class SsaVariable = Definition;
 
-  class SsaPhiNode = PhiNode;
-
-  class ComparisonExpr = RelationalOperation;
+  class SsaPhiNode = Ssa::PhiNode;
 
   class VarAccess = AssignableAccess;
 
   class Guard = G::Guard;
 
   float getNonIntegerValue(Expr e) {
-    result = e.(LongLiteral).getValue().toFloat() or
-    result = e.(RealLiteral).getValue().toFloat()
+    exists(string s |
+      s = e.getValue() and
+      result = s.toFloat() and
+      not exists(s.toInt())
+    )
   }
 
   predicate containerSizeAccess(Expr e) {
-    propertyOverrides(e.(PropertyAccess).getTarget(), "System.Collections.Generic.IEnumerable<>",
-      "Count") or
-    propertyOverrides(e.(PropertyAccess).getTarget(), "System.Collections.ICollection", "Count") or
-    propertyOverrides(e.(PropertyAccess).getTarget(), "System.String", "Length") or
-    propertyOverrides(e.(PropertyAccess).getTarget(), "System.Array", "Length") or
+    exists(Property p | p = e.(PropertyAccess).getTarget() |
+      propertyOverrides(p, "System.Collections.Generic.IEnumerable<>", "Count") or
+      propertyOverrides(p, "System.Collections.ICollection", "Count") or
+      propertyOverrides(p, "System.String", "Length") or
+      propertyOverrides(p, "System.Array", "Length")
+    )
+    or
     e instanceof Linq::CountCall
   }
 
@@ -59,42 +64,31 @@ module Private {
     e instanceof Call and e.getType() instanceof NumericOrCharType
   }
 
-  Sign explicitSsaDefSign(SsaVariable v) {
-    exists(AssignableDefinition def | def = v.(ExplicitDefinition).getADefinition() |
+  Sign explicitSsaDefSign(ExplicitDefinition v) {
+    exists(AssignableDefinition def | def = v.getADefinition() |
       result = exprSign(def.getSource())
       or
       not exists(def.getSource()) and
       not def.getElement() instanceof MutatorOperation
       or
-      result = exprSign(def.getElement().(PostIncrExpr).getOperand()).inc()
+      result = exprSign(def.getElement().(IncrementOperation).getOperand()).inc()
       or
-      result = exprSign(def.getElement().(PreIncrExpr).getOperand()).inc()
-      or
-      result = exprSign(def.getElement().(PostDecrExpr).getOperand()).dec()
-      or
-      result = exprSign(def.getElement().(PreDecrExpr).getOperand()).dec()
+      result = exprSign(def.getElement().(DecrementOperation).getOperand()).dec()
     )
   }
 
-  Sign implicitSsaDefSign(SsaVariable v) {
-    v =
-      any(ImplicitDefinition id |
-        result = fieldSign(id.getSourceVariable().getAssignable()) or
-        not id.getSourceVariable().getAssignable() instanceof Field
-      )
+  Sign implicitSsaDefSign(ImplicitDefinition v) {
+    result = fieldSign(v.getSourceVariable().getAssignable()) or
+    not v.getSourceVariable().getAssignable() instanceof Field
   }
 
   /** Gets a possible sign for `f`. */
   Sign fieldSign(Field f) {
     result = exprSign(f.getAnAssignedValue())
     or
-    exists(PostIncrExpr inc | inc.getOperand() = f.getAnAccess() and result = fieldSign(f).inc())
+    any(IncrementOperation inc).getOperand() = f.getAnAccess() and result = fieldSign(f).inc()
     or
-    exists(PreIncrExpr inc | inc.getOperand() = f.getAnAccess() and result = fieldSign(f).inc())
-    or
-    exists(PostDecrExpr inc | inc.getOperand() = f.getAnAccess() and result = fieldSign(f).dec())
-    or
-    exists(PreDecrExpr inc | inc.getOperand() = f.getAnAccess() and result = fieldSign(f).dec())
+    any(DecrementOperation dec).getOperand() = f.getAnAccess() and result = fieldSign(f).dec()
     or
     exists(AssignOperation a | a.getLValue() = f.getAnAccess() | result = exprSign(a))
     or
@@ -103,6 +97,8 @@ module Private {
 
   Sign specificSubExprSign(Expr e) {
     result = exprSign(e.(AssignExpr).getRValue())
+    or
+    result = exprSign(e.(AssignOperation).getExpandedAssignment())
     or
     result = exprSign(e.(UnaryPlusExpr).getOperand())
     or
@@ -118,44 +114,33 @@ module Private {
     or
     result = exprSign(e.(ComplementExpr).getOperand()).bitnot()
     or
-    exists(DivExpr div |
-      div = e and
-      result = exprSign(div.getLeftOperand()) and
-      result != TZero()
-    |
-      div.getRightOperand().(RealLiteral).getValue().toFloat() = 0
-    )
+    e =
+      any(DivExpr div |
+        result = exprSign(div.getLeftOperand()) and
+        result != TZero() and
+        div.getRightOperand().(RealLiteral).getValue().toFloat() = 0
+      )
     or
     exists(Sign s1, Sign s2 | binaryOpSigns(e, s1, s2) |
-      (e instanceof AssignAddExpr or e instanceof AddExpr) and
-      result = s1.add(s2)
+      e instanceof AddExpr and result = s1.add(s2)
       or
-      (e instanceof AssignSubExpr or e instanceof SubExpr) and
-      result = s1.add(s2.neg())
+      e instanceof SubExpr and result = s1.add(s2.neg())
       or
-      (e instanceof AssignMulExpr or e instanceof MulExpr) and
-      result = s1.mul(s2)
+      e instanceof MulExpr and result = s1.mul(s2)
       or
-      (e instanceof AssignDivExpr or e instanceof DivExpr) and
-      result = s1.div(s2)
+      e instanceof DivExpr and result = s1.div(s2)
       or
-      (e instanceof AssignRemExpr or e instanceof RemExpr) and
-      result = s1.rem(s2)
+      e instanceof RemExpr and result = s1.rem(s2)
       or
-      (e instanceof AssignAndExpr or e instanceof BitwiseAndExpr) and
-      result = s1.bitand(s2)
+      e instanceof BitwiseAndExpr and result = s1.bitand(s2)
       or
-      (e instanceof AssignOrExpr or e instanceof BitwiseOrExpr) and
-      result = s1.bitor(s2)
+      e instanceof BitwiseOrExpr and result = s1.bitor(s2)
       or
-      (e instanceof AssignXorExpr or e instanceof BitwiseXorExpr) and
-      result = s1.bitxor(s2)
+      e instanceof BitwiseXorExpr and result = s1.bitxor(s2)
       or
-      (e instanceof AssignLShiftExpr or e instanceof LShiftExpr) and
-      result = s1.lshift(s2)
+      e instanceof LShiftExpr and result = s1.lshift(s2)
       or
-      (e instanceof AssignRShiftExpr or e instanceof RShiftExpr) and
-      result = s1.rshift(s2)
+      e instanceof RShiftExpr and result = s1.rshift(s2)
     )
     or
     result = exprSign(e.(ConditionalExpr).getThen())
@@ -167,15 +152,9 @@ module Private {
     result = exprSign(e.(CastExpr).getExpr())
   }
 
-  private Sign binaryOpLhsSign(Expr e) {
-    result = exprSign(e.(BinaryOperation).getLeftOperand()) or
-    result = exprSign(e.(AssignOperation).getLValue())
-  }
+  private Sign binaryOpLhsSign(BinaryOperation e) { result = exprSign(e.getLeftOperand()) }
 
-  private Sign binaryOpRhsSign(Expr e) {
-    result = exprSign(e.(BinaryOperation).getRightOperand()) or
-    result = exprSign(e.(AssignOperation).getRValue())
-  }
+  private Sign binaryOpRhsSign(BinaryOperation e) { result = exprSign(e.getRightOperand()) }
 
   pragma[noinline]
   private predicate binaryOpSigns(Expr e, Sign lhs, Sign rhs) {
@@ -188,4 +167,49 @@ module Private {
   Field getField(FieldAccess fa) { result = fa.getTarget() }
 
   Expr getAnExpression(SsaReadPositionBlock bb) { result = bb.getBlock().getANode().getElement() }
+
+  Guard getComparisonGuard(ComparisonExpr ce) { result = ce.getExpr() }
+
+  /**
+   * Holds if `guard` controls the position `controlled` with the value `testIsTrue`.
+   */
+  predicate guardControlsSsaRead(Guard guard, SsaReadPosition controlled, boolean testIsTrue) {
+    exists(BooleanValue b | b.getValue() = testIsTrue |
+      guard.controlsBasicBlock(controlled.(SsaReadPositionBlock).getBlock(), b)
+    )
+  }
+
+  /** A relational comparison */
+  class ComparisonExpr extends ComparisonTest {
+    private boolean strict;
+
+    ComparisonExpr() {
+      this.getComparisonKind() =
+        any(ComparisonKind ck |
+          ck.isLessThan() and strict = true
+          or
+          ck.isLessThanEquals() and
+          strict = false
+        )
+    }
+
+    /**
+     * Gets the operand on the "greater" (or "greater-or-equal") side
+     * of this relational expression, that is, the side that is larger
+     * if the overall expression evaluates to `true`; for example on
+     * `x <= 20` this is the `20`, and on `y > 0` it is `y`.
+     */
+    Expr getGreaterOperand() { result = this.getSecondArgument() }
+
+    /**
+     * Gets the operand on the "lesser" (or "lesser-or-equal") side
+     * of this relational expression, that is, the side that is smaller
+     * if the overall expression evaluates to `true`; for example on
+     * `x <= 20` this is `x`, and on `y > 0` it is the `0`.
+     */
+    Expr getLesserOperand() { result = this.getFirstArgument() }
+
+    /** Holds if this comparison is strict, i.e. `<` or `>`. */
+    predicate isStrict() { strict = true }
+  }
 }

@@ -2,15 +2,15 @@
  * Provides Java-specific definitions for use in sign analysis.
  */
 module Private {
-  import java
   import semmle.code.java.dataflow.SSA
   import semmle.code.java.controlflow.Guards
   import semmle.code.java.dataflow.RangeUtils
+  import SsaReadPositionCommon
+  private import java
   private import semmle.code.java.Reflection
   private import semmle.code.java.Collections
   private import semmle.code.java.Maps
-  import SsaReadPositionCommon
-  private import Sign::Internal
+  private import Sign
   private import SignAnalysisCommon
 
   float getNonIntegerValue(Expr e) {
@@ -178,4 +178,6 @@ module Private {
   Field getField(FieldAccess fa) { result = fa.getField() }
 
   Expr getAnExpression(SsaReadPositionBlock bb) { result = bb.getBlock().getANode() }
+
+  Guard getComparisonGuard(ComparisonExpr ce) { result = ce }
 }

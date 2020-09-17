@@ -5,7 +5,7 @@
 import java
 private import SSA
 private import semmle.code.java.controlflow.internal.GuardsLogic
-private import SsaReadPosition::Internal
+private import semmle.code.java.dataflow.internal.rangeanalysis.SsaReadPositionCommon
 
 /**
  * Holds if `v` is an input to `phi` that is not along a back edge, and the

@@ -1,17 +1,19 @@
 import java
 import semmle.code.java.dataflow.SignAnalysis
 
-string getASignString(Expr i) {
-  positive(i) and
+string getASignString(Expr e) {
+  positive(e) and
+  not strictlyPositive(e) and
   result = "positive"
   or
-  negative(i) and
+  negative(e) and
+  not strictlyNegative(e) and
   result = "negative"
   or
-  strictlyPositive(i) and
+  strictlyPositive(e) and
   result = "strictlyPositive"
   or
-  strictlyNegative(i) and
+  strictlyNegative(e) and
   result = "strictlyNegative"
 }
 

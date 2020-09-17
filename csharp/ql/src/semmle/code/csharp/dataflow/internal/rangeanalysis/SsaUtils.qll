@@ -14,12 +14,11 @@ Expr ssaRead(Definition v, int delta) {
   or
   exists(AddExpr add, int d1, ConstantIntegerExpr c |
     result = add and
-    (
-      add.getLeftOperand() = ssaRead(v, d1) and add.getRightOperand() = c
-      or
-      add.getRightOperand() = ssaRead(v, d1) and add.getLeftOperand() = c
-    ) and
     delta = d1 - c.getIntValue()
+  |
+    add.getLeftOperand() = ssaRead(v, d1) and add.getRightOperand() = c
+    or
+    add.getRightOperand() = ssaRead(v, d1) and add.getLeftOperand() = c
   )
   or
   exists(SubExpr sub, int d1, ConstantIntegerExpr c |

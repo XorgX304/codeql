@@ -8,7 +8,7 @@
 
 private import SignAnalysisSpecific::Private
 private import SsaReadPositionCommon
-private import Sign::Internal
+private import Sign
 
 /** Gets the sign of `e` if this can be directly determined. */
 Sign certainExprSign(Expr e) {
@@ -41,7 +41,7 @@ Sign certainExprSign(Expr e) {
 
 /** Holds if the sign of `e` is too complicated to determine. */
 predicate unknownSign(Expr e) {
-  not exists(e.(ConstantIntegerExpr).getIntValue()) and
+  not exists(certainExprSign(e)) and
   (
     exists(IntegerLiteral lit | lit = e and not exists(lit.getValue().toInt()))
     or
@@ -64,7 +64,7 @@ predicate unknownSign(Expr e) {
 private predicate lowerBound(Expr lowerbound, SsaVariable v, SsaReadPosition pos, boolean isStrict) {
   exists(boolean testIsTrue, ComparisonExpr comp |
     pos.hasReadOfVar(v) and
-    guardControlsSsaRead(comp, pos, testIsTrue) and
+    guardControlsSsaRead(getComparisonGuard(comp), pos, testIsTrue) and
     not unknownSign(lowerbound)
   |
     testIsTrue = true and
@@ -86,7 +86,7 @@ private predicate lowerBound(Expr lowerbound, SsaVariable v, SsaReadPosition pos
 private predicate upperBound(Expr upperbound, SsaVariable v, SsaReadPosition pos, boolean isStrict) {
   exists(boolean testIsTrue, ComparisonExpr comp |
     pos.hasReadOfVar(v) and
-    guardControlsSsaRead(comp, pos, testIsTrue) and
+    guardControlsSsaRead(getComparisonGuard(comp), pos, testIsTrue) and
     not unknownSign(upperbound)
   |
     testIsTrue = true and
@@ -187,7 +187,6 @@ pragma[noinline]
 private Sign guardedSsaSign(SsaVariable v, SsaReadPosition pos) {
   // SSA variable can have sign `result`
   result = ssaDefSign(v) and
-  // SSA variable can have sign `result`
   pos.hasReadOfVar(v) and
   // there are guards at this position on `v` that might restrict it to be sign `result`.
   // (So we need to check if they are satisfied)
@@ -198,7 +197,6 @@ pragma[noinline]
 private Sign unguardedSsaSign(SsaVariable v, SsaReadPosition pos) {
   // SSA variable can have sign `result`
   result = ssaDefSign(v) and
-  // SSA variable can have sign `result`
   pos.hasReadOfVar(v) and
   // there's no guard at this position on `v` that might restrict it to be sign `result`.
   not hasGuard(v, pos, result)
@@ -258,13 +256,14 @@ Sign exprSign(Expr e) {
       result = ssaDefSign(v)
     )
     or
-    exists(VarAccess access | access = e |
-      not exists(SsaVariable v | getARead(v) = access) and
-      (
-        result = fieldSign(getField(access.(FieldAccess))) or
-        not access instanceof FieldAccess
+    e =
+      any(VarAccess access |
+        not exists(SsaVariable v | getARead(v) = access) and
+        (
+          result = fieldSign(getField(access.(FieldAccess))) or
+          not access instanceof FieldAccess
+        )
       )
-    )
     or
     result = specificSubExprSign(e)
   )
