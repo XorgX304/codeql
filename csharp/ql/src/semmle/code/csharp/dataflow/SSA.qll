@@ -2,7 +2,7 @@
  * Provides classes for working with static single assignment (SSA) form.
  */
 
-import csharp
+private import csharp
 
 module Ssa {
   class BasicBlock = ControlFlow::BasicBlock;

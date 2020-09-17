@@ -3,7 +3,7 @@
  * flow elements controlled by those guards.
  */
 
-import java
+private import java
 private import semmle.code.java.controlflow.Dominance
 private import semmle.code.java.controlflow.internal.GuardsLogic
 private import semmle.code.java.controlflow.internal.Preconditions

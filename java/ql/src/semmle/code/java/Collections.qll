@@ -3,7 +3,7 @@
  * `java.util.Collection` and their methods.
  */
 
-import java
+private import java
 
 /**
  * The type `t` is a parameterization of `g`, where the `i`-th type parameter of

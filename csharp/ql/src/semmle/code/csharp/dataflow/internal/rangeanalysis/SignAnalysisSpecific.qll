@@ -2,28 +2,41 @@
  * Provides C#-specific definitions for use in sign analysis.
  */
 module Private {
-  import ConstantUtils
   import SsaUtils
-  import csharp
-  import Ssa
-  private import SsaReadPositionCommon
+  private import csharp as CS
+  private import ConstantUtils as CU
   private import semmle.code.csharp.controlflow.Guards as G
   private import Linq.Helpers as Linq
   private import Sign
   private import SignAnalysisCommon
+  private import SsaReadPositionCommon
   private import semmle.code.csharp.commons.ComparisonTest
 
   private class BooleanValue = G::AbstractValues::BooleanValue;
 
-  class CharacterLiteral = CharLiteral;
-
-  class SsaVariable = Definition;
-
-  class SsaPhiNode = Ssa::PhiNode;
-
-  class VarAccess = AssignableAccess;
-
   class Guard = G::Guard;
+
+  class ConstantIntegerExpr = CU::ConstantIntegerExpr;
+
+  class SsaVariable = CS::Ssa::Definition;
+
+  class SsaPhiNode = CS::Ssa::PhiNode;
+
+  class VarAccess = CS::AssignableAccess;
+
+  class FieldAccess = CS::FieldAccess;
+
+  class CharacterLiteral = CS::CharLiteral;
+
+  class IntegerLiteral = CS::IntegerLiteral;
+
+  class LongLiteral = CS::LongLiteral;
+
+  class CastExpr = CS::CastExpr;
+
+  class Type = CS::Type;
+
+  class Expr = CS::Expr;
 
   float getNonIntegerValue(Expr e) {
     exists(string s |
@@ -34,11 +47,11 @@ module Private {
   }
 
   predicate containerSizeAccess(Expr e) {
-    exists(Property p | p = e.(PropertyAccess).getTarget() |
-      propertyOverrides(p, "System.Collections.Generic.IEnumerable<>", "Count") or
-      propertyOverrides(p, "System.Collections.ICollection", "Count") or
-      propertyOverrides(p, "System.String", "Length") or
-      propertyOverrides(p, "System.Array", "Length")
+    exists(CS::Property p | p = e.(CS::PropertyAccess).getTarget() |
+      CU::propertyOverrides(p, "System.Collections.Generic.IEnumerable<>", "Count") or
+      CU::propertyOverrides(p, "System.Collections.ICollection", "Count") or
+      CU::propertyOverrides(p, "System.String", "Length") or
+      CU::propertyOverrides(p, "System.Array", "Length")
     )
     or
     e instanceof Linq::CountCall
@@ -46,115 +59,115 @@ module Private {
 
   class NumericOrCharType extends Type {
     NumericOrCharType() {
-      this instanceof CharType or
-      this instanceof IntegralType or
-      this instanceof FloatingPointType or
-      this instanceof DecimalType
+      this instanceof CS::CharType or
+      this instanceof CS::IntegralType or
+      this instanceof CS::FloatingPointType or
+      this instanceof CS::DecimalType
     }
   }
 
   predicate unknownIntegerAccess(Expr e) {
     // array access, indexer access
-    e instanceof ElementAccess and e.getType() instanceof NumericOrCharType
+    e instanceof CS::ElementAccess and e.getType() instanceof NumericOrCharType
     or
     // property access
-    e instanceof PropertyAccess and e.getType() instanceof NumericOrCharType
+    e instanceof CS::PropertyAccess and e.getType() instanceof NumericOrCharType
     or
     //method call, local function call, ctor call, ...
-    e instanceof Call and e.getType() instanceof NumericOrCharType
+    e instanceof CS::Call and e.getType() instanceof NumericOrCharType
   }
 
-  Sign explicitSsaDefSign(ExplicitDefinition v) {
-    exists(AssignableDefinition def | def = v.getADefinition() |
+  Sign explicitSsaDefSign(CS::Ssa::ExplicitDefinition v) {
+    exists(CS::AssignableDefinition def | def = v.getADefinition() |
       result = exprSign(def.getSource())
       or
       not exists(def.getSource()) and
-      not def.getElement() instanceof MutatorOperation
+      not def.getElement() instanceof CS::MutatorOperation
       or
-      result = exprSign(def.getElement().(IncrementOperation).getOperand()).inc()
+      result = exprSign(def.getElement().(CS::IncrementOperation).getOperand()).inc()
       or
-      result = exprSign(def.getElement().(DecrementOperation).getOperand()).dec()
+      result = exprSign(def.getElement().(CS::DecrementOperation).getOperand()).dec()
     )
   }
 
-  Sign implicitSsaDefSign(ImplicitDefinition v) {
+  Sign implicitSsaDefSign(CS::Ssa::ImplicitDefinition v) {
     result = fieldSign(v.getSourceVariable().getAssignable()) or
-    not v.getSourceVariable().getAssignable() instanceof Field
+    not v.getSourceVariable().getAssignable() instanceof CS::Field
   }
 
   /** Gets a possible sign for `f`. */
-  Sign fieldSign(Field f) {
+  Sign fieldSign(CS::Field f) {
     result = exprSign(f.getAnAssignedValue())
     or
-    any(IncrementOperation inc).getOperand() = f.getAnAccess() and result = fieldSign(f).inc()
+    any(CS::IncrementOperation inc).getOperand() = f.getAnAccess() and result = fieldSign(f).inc()
     or
-    any(DecrementOperation dec).getOperand() = f.getAnAccess() and result = fieldSign(f).dec()
+    any(CS::DecrementOperation dec).getOperand() = f.getAnAccess() and result = fieldSign(f).dec()
     or
-    exists(AssignOperation a | a.getLValue() = f.getAnAccess() | result = exprSign(a))
+    exists(CS::AssignOperation a | a.getLValue() = f.getAnAccess() | result = exprSign(a))
     or
     f.fromSource() and not exists(f.getInitializer()) and result = TZero()
   }
 
   Sign specificSubExprSign(Expr e) {
-    result = exprSign(e.(AssignExpr).getRValue())
+    result = exprSign(e.(CS::AssignExpr).getRValue())
     or
-    result = exprSign(e.(AssignOperation).getExpandedAssignment())
+    result = exprSign(e.(CS::AssignOperation).getExpandedAssignment())
     or
-    result = exprSign(e.(UnaryPlusExpr).getOperand())
+    result = exprSign(e.(CS::UnaryPlusExpr).getOperand())
     or
-    result = exprSign(e.(PostIncrExpr).getOperand())
+    result = exprSign(e.(CS::PostIncrExpr).getOperand())
     or
-    result = exprSign(e.(PostDecrExpr).getOperand())
+    result = exprSign(e.(CS::PostDecrExpr).getOperand())
     or
-    result = exprSign(e.(PreIncrExpr).getOperand()).inc()
+    result = exprSign(e.(CS::PreIncrExpr).getOperand()).inc()
     or
-    result = exprSign(e.(PreDecrExpr).getOperand()).dec()
+    result = exprSign(e.(CS::PreDecrExpr).getOperand()).dec()
     or
-    result = exprSign(e.(UnaryMinusExpr).getOperand()).neg()
+    result = exprSign(e.(CS::UnaryMinusExpr).getOperand()).neg()
     or
-    result = exprSign(e.(ComplementExpr).getOperand()).bitnot()
+    result = exprSign(e.(CS::ComplementExpr).getOperand()).bitnot()
     or
     e =
-      any(DivExpr div |
+      any(CS::DivExpr div |
         result = exprSign(div.getLeftOperand()) and
         result != TZero() and
-        div.getRightOperand().(RealLiteral).getValue().toFloat() = 0
+        div.getRightOperand().(CS::RealLiteral).getValue().toFloat() = 0
       )
     or
     exists(Sign s1, Sign s2 | binaryOpSigns(e, s1, s2) |
-      e instanceof AddExpr and result = s1.add(s2)
+      e instanceof CS::AddExpr and result = s1.add(s2)
       or
-      e instanceof SubExpr and result = s1.add(s2.neg())
+      e instanceof CS::SubExpr and result = s1.add(s2.neg())
       or
-      e instanceof MulExpr and result = s1.mul(s2)
+      e instanceof CS::MulExpr and result = s1.mul(s2)
       or
-      e instanceof DivExpr and result = s1.div(s2)
+      e instanceof CS::DivExpr and result = s1.div(s2)
       or
-      e instanceof RemExpr and result = s1.rem(s2)
+      e instanceof CS::RemExpr and result = s1.rem(s2)
       or
-      e instanceof BitwiseAndExpr and result = s1.bitand(s2)
+      e instanceof CS::BitwiseAndExpr and result = s1.bitand(s2)
       or
-      e instanceof BitwiseOrExpr and result = s1.bitor(s2)
+      e instanceof CS::BitwiseOrExpr and result = s1.bitor(s2)
       or
-      e instanceof BitwiseXorExpr and result = s1.bitxor(s2)
+      e instanceof CS::BitwiseXorExpr and result = s1.bitxor(s2)
       or
-      e instanceof LShiftExpr and result = s1.lshift(s2)
+      e instanceof CS::LShiftExpr and result = s1.lshift(s2)
       or
-      e instanceof RShiftExpr and result = s1.rshift(s2)
+      e instanceof CS::RShiftExpr and result = s1.rshift(s2)
     )
     or
-    result = exprSign(e.(ConditionalExpr).getThen())
+    result = exprSign(e.(CS::ConditionalExpr).getThen())
     or
-    result = exprSign(e.(ConditionalExpr).getElse())
+    result = exprSign(e.(CS::ConditionalExpr).getElse())
     or
-    result = exprSign(e.(SwitchExpr).getACase().getBody())
+    result = exprSign(e.(CS::SwitchExpr).getACase().getBody())
     or
     result = exprSign(e.(CastExpr).getExpr())
   }
 
-  private Sign binaryOpLhsSign(BinaryOperation e) { result = exprSign(e.getLeftOperand()) }
+  private Sign binaryOpLhsSign(CS::BinaryOperation e) { result = exprSign(e.getLeftOperand()) }
 
-  private Sign binaryOpRhsSign(BinaryOperation e) { result = exprSign(e.getRightOperand()) }
+  private Sign binaryOpRhsSign(CS::BinaryOperation e) { result = exprSign(e.getRightOperand()) }
 
   pragma[noinline]
   private predicate binaryOpSigns(Expr e, Sign lhs, Sign rhs) {
@@ -164,7 +177,7 @@ module Private {
 
   Expr getARead(SsaVariable v) { result = v.getARead() }
 
-  Field getField(FieldAccess fa) { result = fa.getTarget() }
+  CS::Field getField(FieldAccess fa) { result = fa.getTarget() }
 
   Expr getAnExpression(SsaReadPositionBlock bb) { result = bb.getBlock().getANode().getElement() }
 
