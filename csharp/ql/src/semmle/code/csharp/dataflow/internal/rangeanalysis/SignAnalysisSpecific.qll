@@ -75,6 +75,11 @@ predicate unknownIntegerAccess(Expr e) {
   // property access
   e instanceof CS::PropertyAccess and e.getType() instanceof NumericOrCharType
   or
+  // field access on non-this instance
+  e instanceof CS::FieldAccess and
+  e.getType() instanceof NumericOrCharType and
+  not e.(CS::FieldAccess).getQualifier() instanceof CS::ThisAccess
+  or
   //method call, local function call, ctor call, ...
   e instanceof CS::Call and e.getType() instanceof NumericOrCharType
   or

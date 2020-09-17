@@ -359,6 +359,18 @@ class SignAnalysis
             System.Console.WriteLine(i); // strictly positive
         }
     }
+
+    public int MyField = 0;
+
+    void FieldAccess()
+    {
+        var x = new SignAnalysis();
+        var y = x.MyField;
+        if (y < 0)
+        {
+            System.Console.WriteLine(y); // strictly negative
+        }
+    }
 }
 
 // semmle-extractor-options: /r:System.Linq.dll
