@@ -6,7 +6,7 @@
  * three-valued domain `{negative, zero, positive}`.
  */
 
-private import SignAnalysisSpecific::Private
+private import SignAnalysisSpecific
 private import SsaReadPositionCommon
 private import Sign
 
