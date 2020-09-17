@@ -163,3 +163,4 @@
 | SignAnalysis.cs:335:26:335:26 | 1 | strictlyPositive |
 | SignAnalysis.cs:341:21:341:21 | access to parameter v | strictlyNegative |
 | SignAnalysis.cs:348:62:348:62 | 5 | strictlyPositive |
+| SignAnalysis.cs:351:38:351:38 | access to local variable i | strictlyNegative |

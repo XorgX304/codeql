@@ -81,6 +81,9 @@ predicate unknownIntegerAccess(Expr e) {
   or
   // unchecked
   e instanceof CS::UncheckedExpr and e.getType() instanceof NumericOrCharType
+  or
+  // await
+  e instanceof CS::AwaitExpr and e.getType() instanceof NumericOrCharType
 }
 
 Sign explicitSsaDefSign(CS::Ssa::ExplicitDefinition v) {
