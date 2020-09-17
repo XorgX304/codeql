@@ -47,6 +47,8 @@ float getNonIntegerValue(Expr e) {
   result = e.(J::DoubleLiteral).getValue().toFloat()
 }
 
+string getCharValue(Expr e) { result = e.(CharacterLiteral).getValue() }
+
 predicate containerSizeAccess(Expr e) {
   e.(J::MethodAccess).getMethod() instanceof J::StringLengthMethod
   or

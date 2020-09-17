@@ -30,8 +30,10 @@ Sign certainExprSign(Expr e) {
       f > 0 and result = TPos()
     )
     or
-    exists(string charlit | charlit = e.(CharacterLiteral).getValue() |
-      if charlit = "\\0" or charlit = "\\u0000" then result = TZero() else result = TPos()
+    exists(string charlit | charlit = getCharValue(e) |
+      if charlit = "\\0" or charlit = "\\u0000" or charlit.regexpMatch("\\u0000")
+      then result = TZero()
+      else result = TPos()
     )
     or
     containerSizeAccess(e) and

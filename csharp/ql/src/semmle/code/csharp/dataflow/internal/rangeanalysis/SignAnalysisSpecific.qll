@@ -46,6 +46,8 @@ float getNonIntegerValue(Expr e) {
   )
 }
 
+string getCharValue(Expr e) { result = e.getValue() and e.getType() instanceof CS::CharType }
+
 predicate containerSizeAccess(Expr e) {
   exists(CS::Property p | p = e.(CS::PropertyAccess).getTarget() |
     CU::propertyOverrides(p, "System.Collections.Generic.IEnumerable<>", "Count") or

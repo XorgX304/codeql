@@ -155,9 +155,20 @@
 | SignAnalysis.cs:306:21:306:22 | -... | strictlyNegative |
 | SignAnalysis.cs:306:22:306:22 | 1 | strictlyPositive |
 | SignAnalysis.cs:309:38:309:38 | access to local variable x | strictlyNegative |
+| SignAnalysis.cs:316:19:316:31 | access to constant MaxValue | strictlyPositive |
+| SignAnalysis.cs:317:17:317:23 | ... + ... | strictlyPositive |
 | SignAnalysis.cs:317:23:317:23 | 1 | strictlyPositive |
+| SignAnalysis.cs:318:34:318:34 | access to local variable c | strictlyPositive |
+| SignAnalysis.cs:319:9:319:19 | ... = ... | strictlyNegative |
+| SignAnalysis.cs:319:13:319:19 | ... - ... | strictlyNegative |
 | SignAnalysis.cs:319:19:319:19 | 1 | strictlyPositive |
+| SignAnalysis.cs:320:34:320:34 | access to local variable c | strictlyNegative |
+| SignAnalysis.cs:321:9:321:19 | ... = ... | strictlyPositive |
+| SignAnalysis.cs:321:13:321:15 | (...) ... | strictlyPositive |
+| SignAnalysis.cs:321:13:321:15 | access to local variable max | strictlyPositive |
+| SignAnalysis.cs:321:13:321:19 | ... + ... | strictlyPositive |
 | SignAnalysis.cs:321:19:321:19 | 1 | strictlyPositive |
+| SignAnalysis.cs:322:34:322:34 | access to local variable c | strictlyPositive |
 | SignAnalysis.cs:329:21:329:21 | access to parameter v | strictlyPositive |
 | SignAnalysis.cs:329:26:329:26 | 1 | strictlyPositive |
 | SignAnalysis.cs:335:26:335:26 | 1 | strictlyPositive |
