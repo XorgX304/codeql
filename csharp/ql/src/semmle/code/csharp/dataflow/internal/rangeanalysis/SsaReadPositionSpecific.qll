@@ -1,16 +1,16 @@
 /**
  * Provides C#-specific definitions for use in the `SsaReadPosition`.
  */
-module Private {
-  import csharp
-  import Ssa
 
-  class SsaVariable = Definition;
+private import csharp
 
-  class SsaPhiNode = PhiNode;
+class SsaVariable = Ssa::Definition;
 
-  /** Gets a `BasicBlock` for the SSA variable `v`. */
-  BasicBlock getBasicBlock(SsaVariable v) {
-    result = v.getARead().getAControlFlowNode().getBasicBlock()
-  }
+class SsaPhiNode = Ssa::PhiNode;
+
+class BasicBlock = Ssa::BasicBlock;
+
+/** Gets a basic block in which SSA variable `v` is read. */
+BasicBlock getAReadBasicBlock(SsaVariable v) {
+  result = v.getARead().getAControlFlowNode().getBasicBlock()
 }

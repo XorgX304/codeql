@@ -1,10 +1,15 @@
 /**
  * Provides Java-specific definitions for use in the `SsaReadPosition`.
  */
-module Private {
-  import java
-  import semmle.code.java.dataflow.SSA
 
-  /** Gets a `BasicBlock` for the SSA variable `v`. */
-  BasicBlock getBasicBlock(SsaVariable v) { result = v.getAUse().getBasicBlock() }
-}
+private import semmle.code.java.dataflow.SSA as Ssa
+private import semmle.code.java.controlflow.BasicBlocks as BB
+
+class SsaVariable = Ssa::SsaVariable;
+
+class SsaPhiNode = Ssa::SsaPhiNode;
+
+class BasicBlock = BB::BasicBlock;
+
+/** Gets a basic block in which SSA variable `v` is read. */
+BasicBlock getAReadBasicBlock(SsaVariable v) { result = v.getAUse().getBasicBlock() }

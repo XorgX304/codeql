@@ -2,10 +2,10 @@
  * Provides classes for representing a position at which an SSA variable is read.
  */
 
-private import SsaReadPositionSpecific::Private
+private import SsaReadPositionSpecific
 
 private newtype TSsaReadPosition =
-  TSsaReadPositionBlock(BasicBlock bb) { exists(SsaVariable v | bb = getBasicBlock(v)) } or
+  TSsaReadPositionBlock(BasicBlock bb) { bb = getAReadBasicBlock(_) } or
   TSsaReadPositionPhiInputEdge(BasicBlock bbOrig, BasicBlock bbPhi) {
     exists(SsaPhiNode phi | phi.hasInputFromBlock(_, bbOrig) and bbPhi = phi.getBasicBlock())
   }
@@ -28,7 +28,7 @@ class SsaReadPositionBlock extends SsaReadPosition, TSsaReadPositionBlock {
   /** Gets the basic block corresponding to this position. */
   BasicBlock getBlock() { this = TSsaReadPositionBlock(result) }
 
-  override predicate hasReadOfVar(SsaVariable v) { getBlock() = getBasicBlock(v) }
+  override predicate hasReadOfVar(SsaVariable v) { getBlock() = getAReadBasicBlock(v) }
 
   override string toString() { result = "block" }
 }
@@ -39,18 +39,13 @@ class SsaReadPositionBlock extends SsaReadPosition, TSsaReadPositionBlock {
  * input to the phi node.
  */
 class SsaReadPositionPhiInputEdge extends SsaReadPosition, TSsaReadPositionPhiInputEdge {
-  /** Gets the head of the edge. */
+  /** Gets the source of the edge. */
   BasicBlock getOrigBlock() { this = TSsaReadPositionPhiInputEdge(result, _) }
 
-  /** Gets the tail of the edge. */
+  /** Gets the target of the edge. */
   BasicBlock getPhiBlock() { this = TSsaReadPositionPhiInputEdge(_, result) }
 
-  override predicate hasReadOfVar(SsaVariable v) {
-    exists(SsaPhiNode phi |
-      phi.hasInputFromBlock(v, getOrigBlock()) and
-      getPhiBlock() = phi.getBasicBlock()
-    )
-  }
+  override predicate hasReadOfVar(SsaVariable v) { this.phiInput(_, v) }
 
   /** Holds if `inp` is an input to `phi` along this edge. */
   predicate phiInput(SsaPhiNode phi, SsaVariable inp) {
