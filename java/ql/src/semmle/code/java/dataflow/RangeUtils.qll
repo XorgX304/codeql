@@ -2,7 +2,7 @@
  * Provides utility predicates for range analysis.
  */
 
-private import java
+import java
 private import SSA
 private import semmle.code.java.controlflow.internal.GuardsLogic
 private import semmle.code.java.dataflow.internal.rangeanalysis.SsaReadPositionCommon

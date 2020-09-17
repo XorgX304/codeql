@@ -3,8 +3,8 @@
  * `java.util.Map` and their methods.
  */
 
-private import java
-private import Collections
+import java
+import Collections
 
 /** A reference type that extends a parameterization of `java.util.Map`. */
 class MapType extends RefType {

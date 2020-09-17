@@ -11,7 +11,7 @@
  * representation.
  */
 
-private import java
+import java
 private import semmle.code.java.dispatch.VirtualDispatch
 private import semmle.code.java.dispatch.WrappedInvocation
 

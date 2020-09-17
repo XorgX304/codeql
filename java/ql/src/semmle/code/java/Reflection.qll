@@ -2,10 +2,10 @@
  * Provides classes and predicates for working with Java Reflection.
  */
 
-private import java
-private import JDKAnnotations
-private import Serializability
-private import semmle.code.java.dataflow.DefUse
+import java
+import JDKAnnotations
+import Serializability
+import semmle.code.java.dataflow.DefUse
 
 /** Holds if `f` is a field that may be read by reflection. */
 predicate reflectivelyRead(Field f) {
