@@ -151,8 +151,10 @@
 | SignAnalysis.cs:295:38:295:38 | access to parameter i | strictlyPositive |
 | SignAnalysis.cs:300:27:300:28 | -... | strictlyNegative |
 | SignAnalysis.cs:300:28:300:28 | 1 | strictlyPositive |
+| SignAnalysis.cs:303:38:303:38 | access to local variable x | strictlyNegative |
 | SignAnalysis.cs:306:21:306:22 | -... | strictlyNegative |
 | SignAnalysis.cs:306:22:306:22 | 1 | strictlyPositive |
+| SignAnalysis.cs:309:38:309:38 | access to local variable x | strictlyNegative |
 | SignAnalysis.cs:317:23:317:23 | 1 | strictlyPositive |
 | SignAnalysis.cs:319:19:319:19 | 1 | strictlyPositive |
 | SignAnalysis.cs:321:19:321:19 | 1 | strictlyPositive |

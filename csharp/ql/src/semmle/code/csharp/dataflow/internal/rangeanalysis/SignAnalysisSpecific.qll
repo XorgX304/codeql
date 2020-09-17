@@ -75,6 +75,12 @@ predicate unknownIntegerAccess(Expr e) {
   or
   //method call, local function call, ctor call, ...
   e instanceof CS::Call and e.getType() instanceof NumericOrCharType
+  or
+  // checked
+  e instanceof CS::CheckedExpr and e.getType() instanceof NumericOrCharType
+  or
+  // unchecked
+  e instanceof CS::UncheckedExpr and e.getType() instanceof NumericOrCharType
 }
 
 Sign explicitSsaDefSign(CS::Ssa::ExplicitDefinition v) {
