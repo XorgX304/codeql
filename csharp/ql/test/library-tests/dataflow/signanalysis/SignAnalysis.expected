@@ -149,3 +149,15 @@
 | SignAnalysis.cs:280:21:280:21 | access to parameter k | positive |
 | SignAnalysis.cs:280:26:280:26 | 5 | strictlyPositive |
 | SignAnalysis.cs:295:38:295:38 | access to parameter i | strictlyPositive |
+| SignAnalysis.cs:300:27:300:28 | -... | strictlyNegative |
+| SignAnalysis.cs:300:28:300:28 | 1 | strictlyPositive |
+| SignAnalysis.cs:306:21:306:22 | -... | strictlyNegative |
+| SignAnalysis.cs:306:22:306:22 | 1 | strictlyPositive |
+| SignAnalysis.cs:317:23:317:23 | 1 | strictlyPositive |
+| SignAnalysis.cs:319:19:319:19 | 1 | strictlyPositive |
+| SignAnalysis.cs:321:19:321:19 | 1 | strictlyPositive |
+| SignAnalysis.cs:329:21:329:21 | access to parameter v | strictlyPositive |
+| SignAnalysis.cs:329:26:329:26 | 1 | strictlyPositive |
+| SignAnalysis.cs:335:26:335:26 | 1 | strictlyPositive |
+| SignAnalysis.cs:341:21:341:21 | access to parameter v | strictlyNegative |
+| SignAnalysis.cs:348:62:348:62 | 5 | strictlyPositive |

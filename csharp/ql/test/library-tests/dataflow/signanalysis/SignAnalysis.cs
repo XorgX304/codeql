@@ -294,6 +294,71 @@ class SignAnalysis
         if (b)
             System.Console.WriteLine(i); // strictly positive
     }
+
+    void CheckedUnchecked(int i)
+    {
+        var x = unchecked(-1*i*i);
+        if (x < 0)
+        {
+            System.Console.WriteLine(x); // strictly negative
+        }
+
+        x = checked(-1*i*i);
+        if (x < 0)
+        {
+            System.Console.WriteLine(x); // strictly negative
+        }
+    }
+
+    void CharMinMax()
+    {
+        var min = char.MinValue;
+        var max = char.MaxValue;
+        var c = min + 1;
+        System.Console.WriteLine(c); // strictly positive
+        c = min - 1;
+        System.Console.WriteLine(c); // strictly negative
+        c = max + 1;
+        System.Console.WriteLine(c); // strictly positive
+    }
+
+    void NullCoalesce(int? v)
+    {
+        if (v > 0)
+        {
+            var x = v ?? 1;
+            System.Console.WriteLine(x); // strictly positive
+        }
+
+        if (v == null)
+        {
+            var x = v ?? 1;
+            System.Console.WriteLine(x); // strictly positive
+        }
+
+        if (v < 0)
+        {
+            var x = v ?? 0;
+            System.Console.WriteLine(x); // negative
+        }
+    }
+
+    async System.Threading.Tasks.Task Await()
+    {
+        var i = await System.Threading.Tasks.Task.FromResult(5);
+        if (i < 0)
+        {
+            System.Console.WriteLine(i); // strictly negative
+        }
+    }
+
+    void Unsigned(uint i)
+    {
+        if (i != 0) // positive
+        {
+            System.Console.WriteLine(i); // strictly positive
+        }
+    }
 }
 
 // semmle-extractor-options: /r:System.Linq.dll
