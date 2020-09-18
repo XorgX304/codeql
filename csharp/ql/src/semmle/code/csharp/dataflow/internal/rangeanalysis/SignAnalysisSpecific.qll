@@ -91,26 +91,24 @@ Sign implicitSsaDefSign(CS::Ssa::ImplicitDefinition v) {
 
 /** Gets a possible sign for `f`. */
 Sign fieldSign(CS::Field f) {
-  result = exprSign(f.getAnAssignedValue())
-  or
-  any(CS::IncrementOperation inc).getOperand() = f.getAnAccess() and result = fieldSign(f).inc()
-  or
-  any(CS::DecrementOperation dec).getOperand() = f.getAnAccess() and result = fieldSign(f).dec()
-  or
-  exists(CS::AssignOperation a | a.getLValue() = f.getAnAccess() | result = exprSign(a))
-  or
-  f.fromSource() and not exists(f.getInitializer()) and result = TZero()
+  if f.fromSource() and f.isEffectivelyPrivate()
+  then
+    result = exprSign(f.getAnAssignedValue())
+    or
+    any(CS::IncrementOperation inc).getOperand() = f.getAnAccess() and result = fieldSign(f).inc()
+    or
+    any(CS::DecrementOperation dec).getOperand() = f.getAnAccess() and result = fieldSign(f).dec()
+    or
+    exists(CS::AssignOperation a | a.getLValue() = f.getAnAccess() | result = exprSign(a))
+    or
+    not exists(f.getInitializer()) and result = TZero()
+  else any()
 }
 
 predicate unknownIntegerAccess(Expr e) {
   e.getType() instanceof NumericOrCharType and
-  (
-    not e instanceof CS::AssignableAccess
-    or
-    e instanceof CS::FieldAccess and
-    e.getType() instanceof NumericOrCharType and
-    not e.(CS::FieldAccess).getQualifier() instanceof CS::ThisAccess
-  ) and
+  not e = getARead(_) and
+  not e instanceof FieldAccess and
   // The expression types that are listed here are the ones handled in `specificSubExprSign`.
   // Keep them in sync.
   not e instanceof CS::AssignExpr and

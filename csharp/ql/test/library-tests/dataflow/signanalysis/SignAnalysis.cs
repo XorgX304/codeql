@@ -297,13 +297,13 @@ class SignAnalysis
 
     void CheckedUnchecked(int i)
     {
-        var x = unchecked(-1*i*i);
+        var x = unchecked(-1 * i * i);
         if (x < 0)
         {
             System.Console.WriteLine(x); // strictly negative
         }
 
-        x = checked(-1*i*i);
+        x = checked(-1 * i * i);
         if (x < 0)
         {
             System.Console.WriteLine(x); // strictly negative
@@ -383,7 +383,7 @@ class SignAnalysis
     }
 
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit, Size = 15)]
-	struct MyStruct{}
+    struct MyStruct { }
 
     unsafe void Sizeof()
     {
@@ -415,7 +415,7 @@ class SignAnalysis
             Console.WriteLine(i); // strictly positive
     }
 
-    struct MyStruct2{public int F;}
+    public struct MyStruct2 { public int F; }
     void RefExpression(MyStruct2 s)
     {
         ref var x = ref s.F;
@@ -425,7 +425,7 @@ class SignAnalysis
         }
     }
 
-    enum MyEnum {A, B, C}
+    enum MyEnum { A, B, C }
     void EnumOp(MyEnum x, MyEnum y)
     {
         var i = x - y;
