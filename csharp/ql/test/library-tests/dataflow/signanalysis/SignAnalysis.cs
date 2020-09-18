@@ -400,6 +400,30 @@ class SignAnalysis
         };
         System.Console.WriteLine(x); // positive
     }
+
+    void Capture()
+    {
+        var i = 1;
+        void Capture()
+        {
+            if (i > 0)
+                Console.WriteLine(i); // strictly positive
+        }
+        Capture();
+
+        if (i > 0)
+            Console.WriteLine(i); // strictly positive
+    }
+
+    struct MyStruct2{public int F;}
+    void RefExpression(MyStruct2 s)
+    {
+        ref var x = ref s.F;
+        if (x < 0)
+        {
+            Console.WriteLine(x); // strictly negative
+        }
+    }
 }
 
 // semmle-extractor-options: /r:System.Linq.dll

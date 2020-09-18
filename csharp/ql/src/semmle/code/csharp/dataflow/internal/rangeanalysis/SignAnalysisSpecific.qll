@@ -96,6 +96,10 @@ predicate unknownIntegerAccess(Expr e) {
   or
   // pointer access
   e instanceof CS::PointerIndirectionExpr and e.getType() instanceof NumericOrCharType
+  or
+  // var declaration
+  e = any(CS::LocalVariableDeclExpr var | not var.hasInitializer()) and
+  e.getType() instanceof NumericOrCharType
 }
 
 Sign explicitSsaDefSign(CS::Ssa::ExplicitDefinition v) {
@@ -186,6 +190,10 @@ Sign specificSubExprSign(Expr e) {
   result = exprSign(e.(CS::CastExpr).getExpr())
   or
   result = exprSign(e.(CS::SwitchCaseExpr).getBody())
+  or
+  result = exprSign(e.(CS::LocalVariableDeclAndInitExpr).getInitializer())
+  or
+  result = exprSign(e.(CS::RefExpr).getExpr())
 }
 
 private Sign binaryOpLhsSign(CS::BinaryOperation e) { result = exprSign(e.getLeftOperand()) }
