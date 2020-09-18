@@ -962,6 +962,17 @@ module Internal {
     e = any(BinaryArithmeticOperation bao | result = bao.getAnOperand())
   }
 
+  pragma[noinline]
+  private predicate assertionControlsNodeInSameBasicBlock0(
+    Guard g, AbstractValue v, BasicBlock bb, int i
+  ) {
+    exists(Assertion a, Guard g0, AbstractValue v0 |
+      asserts(a, g0, v0) and
+      impliesSteps(g0, v0, g, v) and
+      bb.getNode(i) = a.getAControlFlowNode()
+    )
+  }
+
   /**
    * Holds if control flow node `cfn` only is reached when guard `g` evaluates to `v`,
    * because of an assertion.
@@ -969,10 +980,8 @@ module Internal {
   private predicate assertionControlsNodeInSameBasicBlock(
     Guard g, ControlFlow::Node cfn, AbstractValue v
   ) {
-    exists(Assertion a, Guard g0, AbstractValue v0, BasicBlock bb, int i, int j |
-      asserts(a, g0, v0) and
-      impliesSteps(g0, v0, g, v) and
-      bb.getNode(i) = a.getAControlFlowNode() and
+    exists(BasicBlock bb, int i, int j |
+      assertionControlsNodeInSameBasicBlock0(g, v, bb, i) and
       bb.getNode(j) = cfn and
       j > i
     )
