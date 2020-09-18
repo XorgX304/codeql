@@ -187,3 +187,7 @@
 | SignAnalysis.cs:385:109:385:110 | 15 | strictlyPositive |
 | SignAnalysis.cs:390:17:390:32 | sizeof(..) | strictlyPositive |
 | SignAnalysis.cs:391:34:391:34 | access to local variable x | strictlyPositive |
+| SignAnalysis.cs:396:17:400:9 | ... switch { ... } | positive |
+| SignAnalysis.cs:399:13:399:18 | ... => ... | strictlyPositive |
+| SignAnalysis.cs:399:18:399:18 | 2 | strictlyPositive |
+| SignAnalysis.cs:401:34:401:34 | access to local variable x | positive |

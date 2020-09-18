@@ -390,6 +390,16 @@ class SignAnalysis
         var x = sizeof(MyStruct);
         System.Console.WriteLine(x); // strictly positive
     }
+
+    void SwitchCase(string s)
+    {
+        var x = s switch
+        {
+            "x" => 0,
+            _ => 2
+        };
+        System.Console.WriteLine(x); // positive
+    }
 }
 
 // semmle-extractor-options: /r:System.Linq.dll

@@ -183,7 +183,9 @@ Sign specificSubExprSign(Expr e) {
   or
   result = exprSign(e.(CS::SwitchExpr).getACase().getBody())
   or
-  result = exprSign(e.(CastExpr).getExpr())
+  result = exprSign(e.(CS::CastExpr).getExpr())
+  or
+  result = exprSign(e.(CS::SwitchCaseExpr).getBody())
 }
 
 private Sign binaryOpLhsSign(CS::BinaryOperation e) { result = exprSign(e.getLeftOperand()) }
