@@ -59,6 +59,8 @@ predicate containerSizeAccess(Expr e) {
   e instanceof Linq::CountCall
 }
 
+predicate positiveExpression(Expr e) { e instanceof CS::SizeofExpr }
+
 class NumericOrCharType extends Type {
   NumericOrCharType() {
     this instanceof CS::CharType or

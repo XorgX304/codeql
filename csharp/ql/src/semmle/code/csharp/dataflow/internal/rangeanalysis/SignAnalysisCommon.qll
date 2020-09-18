@@ -38,6 +38,8 @@ Sign certainExprSign(Expr e) {
     or
     containerSizeAccess(e) and
     (result = TPos() or result = TZero())
+    or
+    positiveExpression(e) and result = TPos()
   )
 }
 

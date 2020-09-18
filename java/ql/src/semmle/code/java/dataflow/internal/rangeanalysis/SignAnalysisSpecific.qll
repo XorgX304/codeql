@@ -57,6 +57,8 @@ predicate containerSizeAccess(Expr e) {
   e.(J::MethodAccess).getMethod() instanceof Maps::MapSizeMethod
 }
 
+predicate positiveExpression(Expr e) { none() }
+
 predicate unknownIntegerAccess(Expr e) {
   e instanceof J::ArrayAccess and e.getType() instanceof J::NumericOrCharType
   or

@@ -381,6 +381,15 @@ class SignAnalysis
             System.Console.WriteLine(x); // strictly negative
         }
     }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit, Size = 15)]
+	struct MyStruct{}
+
+    unsafe void Sizeof()
+    {
+        var x = sizeof(MyStruct);
+        System.Console.WriteLine(x); // strictly positive
+    }
 }
 
 // semmle-extractor-options: /r:System.Linq.dll
