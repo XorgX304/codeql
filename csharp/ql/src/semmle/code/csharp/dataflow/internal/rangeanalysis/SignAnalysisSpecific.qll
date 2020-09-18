@@ -66,43 +66,9 @@ class NumericOrCharType extends Type {
     this instanceof CS::CharType or
     this instanceof CS::IntegralType or
     this instanceof CS::FloatingPointType or
-    this instanceof CS::DecimalType
+    this instanceof CS::DecimalType or
+    this instanceof CS::Enum
   }
-}
-
-predicate unknownIntegerAccess(Expr e) {
-  // array access, indexer access
-  e instanceof CS::ElementAccess and e.getType() instanceof NumericOrCharType
-  or
-  // property access
-  e instanceof CS::PropertyAccess and e.getType() instanceof NumericOrCharType
-  or
-  // field access on non-this instance
-  e instanceof CS::FieldAccess and
-  e.getType() instanceof NumericOrCharType and
-  not e.(CS::FieldAccess).getQualifier() instanceof CS::ThisAccess
-  or
-  //method call, local function call, ctor call, ...
-  e instanceof CS::Call and e.getType() instanceof NumericOrCharType
-  or
-  // checked
-  e instanceof CS::CheckedExpr and e.getType() instanceof NumericOrCharType
-  or
-  // unchecked
-  e instanceof CS::UncheckedExpr and e.getType() instanceof NumericOrCharType
-  or
-  // await
-  e instanceof CS::AwaitExpr and e.getType() instanceof NumericOrCharType
-  or
-  // pointer access
-  e instanceof CS::PointerIndirectionExpr and e.getType() instanceof NumericOrCharType
-  or
-  // var declaration
-  e = any(CS::LocalVariableDeclExpr var | not var.hasInitializer()) and
-  e.getType() instanceof NumericOrCharType
-  or
-  // enum access
-  e.getType() instanceof CS::Enum
 }
 
 Sign explicitSsaDefSign(CS::Ssa::ExplicitDefinition v) {
@@ -136,7 +102,48 @@ Sign fieldSign(CS::Field f) {
   f.fromSource() and not exists(f.getInitializer()) and result = TZero()
 }
 
+predicate unknownIntegerAccess(Expr e) {
+  e.getType() instanceof NumericOrCharType and
+  (
+    not e instanceof CS::AssignableAccess
+    or
+    e instanceof CS::FieldAccess and
+    e.getType() instanceof NumericOrCharType and
+    not e.(CS::FieldAccess).getQualifier() instanceof CS::ThisAccess
+  ) and
+  // The expression types that are listed here are the ones handled in `specificSubExprSign`.
+  // Keep them in sync.
+  not e instanceof CS::AssignExpr and
+  not e instanceof CS::AssignOperation and
+  not e instanceof CS::UnaryPlusExpr and
+  not e instanceof CS::PostIncrExpr and
+  not e instanceof CS::PostDecrExpr and
+  not e instanceof CS::PreIncrExpr and
+  not e instanceof CS::PreDecrExpr and
+  not e instanceof CS::UnaryMinusExpr and
+  not e instanceof CS::ComplementExpr and
+  not e instanceof CS::AddExpr and
+  not e instanceof CS::SubExpr and
+  not e instanceof CS::MulExpr and
+  not e instanceof CS::DivExpr and
+  not e instanceof CS::RemExpr and
+  not e instanceof CS::BitwiseAndExpr and
+  not e instanceof CS::BitwiseOrExpr and
+  not e instanceof CS::BitwiseXorExpr and
+  not e instanceof CS::LShiftExpr and
+  not e instanceof CS::RShiftExpr and
+  not e instanceof CS::ConditionalExpr and
+  not e instanceof CS::RefExpr and
+  not e instanceof CS::LocalVariableDeclAndInitExpr and
+  not e instanceof CS::SwitchCaseExpr and
+  not e instanceof CS::CastExpr and
+  not e instanceof CS::SwitchExpr and
+  not e instanceof CS::NullCoalescingExpr
+}
+
 Sign specificSubExprSign(Expr e) {
+  // The expression types that are handled here should be excluded in `unknownIntegerAccess`.
+  // Keep them in sync.
   result = exprSign(e.(CS::AssignExpr).getRValue())
   or
   result = exprSign(e.(CS::AssignOperation).getExpandedAssignment())
