@@ -172,9 +172,9 @@ Sign specificSubExprSign(Expr e) {
     e instanceof CS::RShiftExpr and result = s1.rshift(s2)
   )
   or
-  result = exprSign(e.(CS::ConditionalExpr).getThen())
+  result = exprSign(e.(CS::ConditionalExpr).getAChild())
   or
-  result = exprSign(e.(CS::ConditionalExpr).getElse())
+  result = exprSign(e.(CS::NullCoalescingExpr).getAChild())
   or
   result = exprSign(e.(CS::SwitchExpr).getACase().getBody())
   or

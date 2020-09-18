@@ -170,9 +170,15 @@
 | SignAnalysis.cs:321:19:321:19 | 1 | strictlyPositive |
 | SignAnalysis.cs:322:34:322:34 | access to local variable c | strictlyPositive |
 | SignAnalysis.cs:329:21:329:21 | access to parameter v | strictlyPositive |
+| SignAnalysis.cs:329:21:329:26 | ... ?? ... | strictlyPositive |
 | SignAnalysis.cs:329:26:329:26 | 1 | strictlyPositive |
+| SignAnalysis.cs:330:38:330:38 | access to local variable x | strictlyPositive |
+| SignAnalysis.cs:335:21:335:26 | ... ?? ... | strictlyPositive |
 | SignAnalysis.cs:335:26:335:26 | 1 | strictlyPositive |
+| SignAnalysis.cs:336:38:336:38 | access to local variable x | strictlyPositive |
 | SignAnalysis.cs:341:21:341:21 | access to parameter v | strictlyNegative |
+| SignAnalysis.cs:341:21:341:26 | ... ?? ... | negative |
+| SignAnalysis.cs:342:38:342:38 | access to local variable x | negative |
 | SignAnalysis.cs:348:62:348:62 | 5 | strictlyPositive |
 | SignAnalysis.cs:351:38:351:38 | access to local variable i | strictlyNegative |
 | SignAnalysis.cs:371:38:371:38 | access to local variable y | strictlyNegative |
