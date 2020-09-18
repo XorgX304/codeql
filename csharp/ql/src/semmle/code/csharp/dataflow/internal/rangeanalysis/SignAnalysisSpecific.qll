@@ -100,6 +100,9 @@ predicate unknownIntegerAccess(Expr e) {
   // var declaration
   e = any(CS::LocalVariableDeclExpr var | not var.hasInitializer()) and
   e.getType() instanceof NumericOrCharType
+  or
+  // enum access
+  e.getType() instanceof CS::Enum
 }
 
 Sign explicitSsaDefSign(CS::Ssa::ExplicitDefinition v) {

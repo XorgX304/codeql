@@ -424,6 +424,16 @@ class SignAnalysis
             Console.WriteLine(x); // strictly negative
         }
     }
+
+    enum MyEnum {A, B, C}
+    void EnumOp(MyEnum x, MyEnum y)
+    {
+        var i = x - y;
+        if (i < 0)
+        {
+            System.Console.WriteLine(i); // strictly negative
+        }
+    }
 }
 
 // semmle-extractor-options: /r:System.Linq.dll
