@@ -91,6 +91,9 @@ predicate unknownIntegerAccess(Expr e) {
   or
   // await
   e instanceof CS::AwaitExpr and e.getType() instanceof NumericOrCharType
+  or
+  // pointer access
+  e instanceof CS::PointerIndirectionExpr and e.getType() instanceof NumericOrCharType
 }
 
 Sign explicitSsaDefSign(CS::Ssa::ExplicitDefinition v) {

@@ -371,6 +371,16 @@ class SignAnalysis
             System.Console.WriteLine(y); // strictly negative
         }
     }
+
+    private static unsafe void Pointer(float d)
+    {
+        float* dp = &d;
+        var x = *dp;
+        if (x < 0)
+        {
+            System.Console.WriteLine(x); // strictly negative
+        }
+    }
 }
 
 // semmle-extractor-options: /r:System.Linq.dll

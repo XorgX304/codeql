@@ -182,3 +182,4 @@
 | SignAnalysis.cs:348:62:348:62 | 5 | strictlyPositive |
 | SignAnalysis.cs:351:38:351:38 | access to local variable i | strictlyNegative |
 | SignAnalysis.cs:371:38:371:38 | access to local variable y | strictlyNegative |
+| SignAnalysis.cs:381:38:381:38 | access to local variable x | strictlyNegative |
