@@ -1,220 +1,227 @@
 /**
  * Provides Java-specific definitions for use in sign analysis.
  */
+module Private {
+  import semmle.code.java.dataflow.RangeUtils as RU
+  private import semmle.code.java.dataflow.SSA as Ssa
+  private import semmle.code.java.controlflow.Guards as G
+  private import java as J
+  import Impl
 
-import semmle.code.java.dataflow.RangeUtils as RU
-private import semmle.code.java.dataflow.SSA as Ssa
-private import semmle.code.java.controlflow.Guards as G
-private import java as J
-private import semmle.code.java.Reflection as Reflection
-private import semmle.code.java.Collections as Collections
-private import semmle.code.java.Maps as Maps
-private import Sign
-private import SignAnalysisCommon
-private import SsaReadPositionCommon
+  class ConstantIntegerExpr = RU::ConstantIntegerExpr;
 
-class ConstantIntegerExpr = RU::ConstantIntegerExpr;
+  class Guard = G::Guard;
 
-class Guard = G::Guard;
+  class SsaVariable = Ssa::SsaVariable;
 
-class SsaVariable = Ssa::SsaVariable;
+  class SsaPhiNode = Ssa::SsaPhiNode;
 
-class SsaPhiNode = Ssa::SsaPhiNode;
+  class VarAccess = J::VarAccess;
 
-class VarAccess = J::VarAccess;
+  class FieldAccess = J::FieldAccess;
 
-class FieldAccess = J::FieldAccess;
+  class CharacterLiteral = J::CharacterLiteral;
 
-class CharacterLiteral = J::CharacterLiteral;
+  class IntegerLiteral = J::IntegerLiteral;
 
-class IntegerLiteral = J::IntegerLiteral;
+  class LongLiteral = J::LongLiteral;
 
-class LongLiteral = J::LongLiteral;
+  class CastExpr = J::CastExpr;
 
-class CastExpr = J::CastExpr;
+  class Type = J::Type;
 
-class Type = J::Type;
+  class Expr = J::Expr;
 
-class Expr = J::Expr;
+  class ComparisonExpr = J::ComparisonExpr;
 
-class ComparisonExpr = J::ComparisonExpr;
+  class NumericOrCharType = J::NumericOrCharType;
 
-class NumericOrCharType = J::NumericOrCharType;
+  predicate ssaRead = RU::ssaRead/2;
 
-float getNonIntegerValue(Expr e) {
-  result = e.(J::LongLiteral).getValue().toFloat() or
-  result = e.(J::FloatingPointLiteral).getValue().toFloat() or
-  result = e.(J::DoubleLiteral).getValue().toFloat()
+  predicate guardControlsSsaRead = RU::guardControlsSsaRead/3;
 }
 
-string getCharValue(Expr e) { result = e.(CharacterLiteral).getValue() }
+private module Impl {
+  private import java
+  private import semmle.code.java.dataflow.RangeUtils
+  private import semmle.code.java.dataflow.SSA
+  private import semmle.code.java.controlflow.Guards
+  private import semmle.code.java.Reflection
+  private import semmle.code.java.Collections
+  private import semmle.code.java.Maps
+  private import Sign
+  private import SignAnalysisCommon
+  private import SsaReadPositionCommon
 
-predicate containerSizeAccess(Expr e) {
-  e.(J::MethodAccess).getMethod() instanceof J::StringLengthMethod
-  or
-  e.(J::MethodAccess).getMethod() instanceof Collections::CollectionSizeMethod
-  or
-  e.(J::MethodAccess).getMethod() instanceof Maps::MapSizeMethod
-}
+  float getNonIntegerValue(Expr e) {
+    result = e.(LongLiteral).getValue().toFloat() or
+    result = e.(FloatingPointLiteral).getValue().toFloat() or
+    result = e.(DoubleLiteral).getValue().toFloat()
+  }
 
-predicate positiveExpression(Expr e) { none() }
+  string getCharValue(Expr e) { result = e.(CharacterLiteral).getValue() }
 
-predicate unknownIntegerAccess(Expr e) {
-  e instanceof J::ArrayAccess and e.getType() instanceof J::NumericOrCharType
-  or
-  e instanceof J::MethodAccess and e.getType() instanceof J::NumericOrCharType
-  or
-  e instanceof J::ClassInstanceExpr and e.getType() instanceof J::NumericOrCharType
-}
+  predicate containerSizeAccess(Expr e) {
+    e.(MethodAccess).getMethod() instanceof StringLengthMethod
+    or
+    e.(MethodAccess).getMethod() instanceof CollectionSizeMethod
+    or
+    e.(MethodAccess).getMethod() instanceof MapSizeMethod
+  }
 
-Sign explicitSsaDefSign(SsaVariable v) {
-  exists(J::VariableUpdate def | def = v.(Ssa::SsaExplicitUpdate).getDefiningExpr() |
-    result = exprSign(def.(J::VariableAssign).getSource())
-    or
-    exists(J::EnhancedForStmt for | def = for.getVariable())
-    or
-    result = exprSign(def.(J::PostIncExpr).getExpr()).inc()
-    or
-    result = exprSign(def.(J::PreIncExpr).getExpr()).inc()
-    or
-    result = exprSign(def.(J::PostDecExpr).getExpr()).dec()
-    or
-    result = exprSign(def.(J::PreDecExpr).getExpr()).dec()
-    or
-    exists(J::AssignOp a | a = def and result = exprSign(a))
-  )
-}
+  predicate positiveExpression(Expr e) { none() }
 
-Sign implicitSsaDefSign(SsaVariable v) {
-  result = fieldSign(v.(Ssa::SsaImplicitUpdate).getSourceVariable().getVariable())
-  or
-  result = fieldSign(v.(Ssa::SsaImplicitInit).getSourceVariable().getVariable())
-  or
-  exists(J::Parameter p | v.(Ssa::SsaImplicitInit).isParameterDefinition(p))
-}
+  predicate unknownIntegerAccess(Expr e) {
+    e instanceof ArrayAccess and e.getType() instanceof NumericOrCharType
+    or
+    e instanceof MethodAccess and e.getType() instanceof NumericOrCharType
+    or
+    e instanceof ClassInstanceExpr and e.getType() instanceof NumericOrCharType
+  }
 
-/** Gets a possible sign for `f`. */
-Sign fieldSign(J::Field f) {
-  result = exprSign(f.getAnAssignedValue())
-  or
-  exists(J::PostIncExpr inc | inc.getExpr() = f.getAnAccess() and result = fieldSign(f).inc())
-  or
-  exists(J::PreIncExpr inc | inc.getExpr() = f.getAnAccess() and result = fieldSign(f).inc())
-  or
-  exists(J::PostDecExpr inc | inc.getExpr() = f.getAnAccess() and result = fieldSign(f).dec())
-  or
-  exists(J::PreDecExpr inc | inc.getExpr() = f.getAnAccess() and result = fieldSign(f).dec())
-  or
-  exists(J::AssignOp a | a.getDest() = f.getAnAccess() | result = exprSign(a))
-  or
-  exists(Reflection::ReflectiveFieldAccess rfa | rfa.inferAccessedField() = f)
-  or
-  if f.fromSource()
-  then not exists(f.getInitializer()) and result = TZero()
-  else
-    if f instanceof J::ArrayLengthField
-    then result != TNeg()
+  Sign explicitSsaDefSign(SsaVariable v) {
+    exists(VariableUpdate def | def = v.(SsaExplicitUpdate).getDefiningExpr() |
+      result = exprSign(def.(VariableAssign).getSource())
+      or
+      exists(EnhancedForStmt for | def = for.getVariable())
+      or
+      result = exprSign(def.(PostIncExpr).getExpr()).inc()
+      or
+      result = exprSign(def.(PreIncExpr).getExpr()).inc()
+      or
+      result = exprSign(def.(PostDecExpr).getExpr()).dec()
+      or
+      result = exprSign(def.(PreDecExpr).getExpr()).dec()
+      or
+      exists(AssignOp a | a = def and result = exprSign(a))
+    )
+  }
+
+  Sign implicitSsaDefSign(SsaVariable v) {
+    result = fieldSign(v.(SsaImplicitUpdate).getSourceVariable().getVariable())
+    or
+    result = fieldSign(v.(SsaImplicitInit).getSourceVariable().getVariable())
+    or
+    exists(Parameter p | v.(SsaImplicitInit).isParameterDefinition(p))
+  }
+
+  /** Gets a possible sign for `f`. */
+  Sign fieldSign(Field f) {
+    result = exprSign(f.getAnAssignedValue())
+    or
+    exists(PostIncExpr inc | inc.getExpr() = f.getAnAccess() and result = fieldSign(f).inc())
+    or
+    exists(PreIncExpr inc | inc.getExpr() = f.getAnAccess() and result = fieldSign(f).inc())
+    or
+    exists(PostDecExpr inc | inc.getExpr() = f.getAnAccess() and result = fieldSign(f).dec())
+    or
+    exists(PreDecExpr inc | inc.getExpr() = f.getAnAccess() and result = fieldSign(f).dec())
+    or
+    exists(AssignOp a | a.getDest() = f.getAnAccess() | result = exprSign(a))
+    or
+    exists(ReflectiveFieldAccess rfa | rfa.inferAccessedField() = f)
+    or
+    if f.fromSource()
+    then not exists(f.getInitializer()) and result = TZero()
     else
-      if f.hasName("MAX_VALUE")
-      then result = TPos()
+      if f instanceof ArrayLengthField
+      then result != TNeg()
       else
-        if f.hasName("MIN_VALUE")
-        then result = TNeg()
-        else any()
-}
+        if f.hasName("MAX_VALUE")
+        then result = TPos()
+        else
+          if f.hasName("MIN_VALUE")
+          then result = TNeg()
+          else any()
+  }
 
-Sign specificSubExprSign(Expr e) {
-  result = exprSign(e.(J::AssignExpr).getSource())
-  or
-  result = exprSign(e.(J::PlusExpr).getExpr())
-  or
-  result = exprSign(e.(J::PostIncExpr).getExpr())
-  or
-  result = exprSign(e.(J::PostDecExpr).getExpr())
-  or
-  result = exprSign(e.(J::PreIncExpr).getExpr()).inc()
-  or
-  result = exprSign(e.(J::PreDecExpr).getExpr()).dec()
-  or
-  result = exprSign(e.(J::MinusExpr).getExpr()).neg()
-  or
-  result = exprSign(e.(J::BitNotExpr).getExpr()).bitnot()
-  or
-  exists(J::DivExpr div |
-    div = e and
-    result = exprSign(div.getLeftOperand()) and
-    result != TZero()
-  |
-    div.getRightOperand().(J::FloatingPointLiteral).getValue().toFloat() = 0 or
-    div.getRightOperand().(J::DoubleLiteral).getValue().toFloat() = 0
-  )
-  or
-  exists(Sign s1, Sign s2 | binaryOpSigns(e, s1, s2) |
-    (e instanceof J::AssignAddExpr or e instanceof J::AddExpr) and
-    result = s1.add(s2)
+  Sign specificSubExprSign(Expr e) {
+    result = exprSign(e.(AssignExpr).getSource())
     or
-    (e instanceof J::AssignSubExpr or e instanceof J::SubExpr) and
-    result = s1.add(s2.neg())
+    result = exprSign(e.(PlusExpr).getExpr())
     or
-    (e instanceof J::AssignMulExpr or e instanceof J::MulExpr) and
-    result = s1.mul(s2)
+    result = exprSign(e.(PostIncExpr).getExpr())
     or
-    (e instanceof J::AssignDivExpr or e instanceof J::DivExpr) and
-    result = s1.div(s2)
+    result = exprSign(e.(PostDecExpr).getExpr())
     or
-    (e instanceof J::AssignRemExpr or e instanceof J::RemExpr) and
-    result = s1.rem(s2)
+    result = exprSign(e.(PreIncExpr).getExpr()).inc()
     or
-    (e instanceof J::AssignAndExpr or e instanceof J::AndBitwiseExpr) and
-    result = s1.bitand(s2)
+    result = exprSign(e.(PreDecExpr).getExpr()).dec()
     or
-    (e instanceof J::AssignOrExpr or e instanceof J::OrBitwiseExpr) and
-    result = s1.bitor(s2)
+    result = exprSign(e.(MinusExpr).getExpr()).neg()
     or
-    (e instanceof J::AssignXorExpr or e instanceof J::XorBitwiseExpr) and
-    result = s1.bitxor(s2)
+    result = exprSign(e.(BitNotExpr).getExpr()).bitnot()
     or
-    (e instanceof J::AssignLShiftExpr or e instanceof J::LShiftExpr) and
-    result = s1.lshift(s2)
+    exists(DivExpr div |
+      div = e and
+      result = exprSign(div.getLeftOperand()) and
+      result != TZero()
+    |
+      div.getRightOperand().(FloatingPointLiteral).getValue().toFloat() = 0 or
+      div.getRightOperand().(DoubleLiteral).getValue().toFloat() = 0
+    )
     or
-    (e instanceof J::AssignRShiftExpr or e instanceof J::RShiftExpr) and
-    result = s1.rshift(s2)
+    exists(Sign s1, Sign s2 | binaryOpSigns(e, s1, s2) |
+      (e instanceof AssignAddExpr or e instanceof AddExpr) and
+      result = s1.add(s2)
+      or
+      (e instanceof AssignSubExpr or e instanceof SubExpr) and
+      result = s1.add(s2.neg())
+      or
+      (e instanceof AssignMulExpr or e instanceof MulExpr) and
+      result = s1.mul(s2)
+      or
+      (e instanceof AssignDivExpr or e instanceof DivExpr) and
+      result = s1.div(s2)
+      or
+      (e instanceof AssignRemExpr or e instanceof RemExpr) and
+      result = s1.rem(s2)
+      or
+      (e instanceof AssignAndExpr or e instanceof AndBitwiseExpr) and
+      result = s1.bitand(s2)
+      or
+      (e instanceof AssignOrExpr or e instanceof OrBitwiseExpr) and
+      result = s1.bitor(s2)
+      or
+      (e instanceof AssignXorExpr or e instanceof XorBitwiseExpr) and
+      result = s1.bitxor(s2)
+      or
+      (e instanceof AssignLShiftExpr or e instanceof LShiftExpr) and
+      result = s1.lshift(s2)
+      or
+      (e instanceof AssignRShiftExpr or e instanceof RShiftExpr) and
+      result = s1.rshift(s2)
+      or
+      (e instanceof AssignURShiftExpr or e instanceof URShiftExpr) and
+      result = s1.urshift(s2)
+    )
     or
-    (e instanceof J::AssignURShiftExpr or e instanceof J::URShiftExpr) and
-    result = s1.urshift(s2)
-  )
-  or
-  result = exprSign(e.(J::ChooseExpr).getAResultExpr())
-  or
-  result = exprSign(e.(J::CastExpr).getExpr())
-}
+    result = exprSign(e.(ChooseExpr).getAResultExpr())
+    or
+    result = exprSign(e.(CastExpr).getExpr())
+  }
 
-private Sign binaryOpLhsSign(Expr e) {
-  result = exprSign(e.(J::BinaryExpr).getLeftOperand()) or
-  result = exprSign(e.(J::AssignOp).getDest())
-}
+  private Sign binaryOpLhsSign(Expr e) {
+    result = exprSign(e.(BinaryExpr).getLeftOperand()) or
+    result = exprSign(e.(AssignOp).getDest())
+  }
 
-private Sign binaryOpRhsSign(Expr e) {
-  result = exprSign(e.(J::BinaryExpr).getRightOperand()) or
-  result = exprSign(e.(J::AssignOp).getRhs())
-}
+  private Sign binaryOpRhsSign(Expr e) {
+    result = exprSign(e.(BinaryExpr).getRightOperand()) or
+    result = exprSign(e.(AssignOp).getRhs())
+  }
 
-pragma[noinline]
-private predicate binaryOpSigns(Expr e, Sign lhs, Sign rhs) {
-  lhs = binaryOpLhsSign(e) and
-  rhs = binaryOpRhsSign(e)
-}
+  pragma[noinline]
+  private predicate binaryOpSigns(Expr e, Sign lhs, Sign rhs) {
+    lhs = binaryOpLhsSign(e) and
+    rhs = binaryOpRhsSign(e)
+  }
 
-Expr getARead(SsaVariable v) { result = v.getAUse() }
+  Expr getARead(SsaVariable v) { result = v.getAUse() }
 
-J::Field getField(FieldAccess fa) { result = fa.getField() }
+  Field getField(FieldAccess fa) { result = fa.getField() }
 
-Expr getAnExpression(SsaReadPositionBlock bb) { result = bb.getBlock().getANode() }
+  Expr getAnExpression(SsaReadPositionBlock bb) { result = bb.getBlock().getANode() }
 
-Guard getComparisonGuard(J::ComparisonExpr ce) { result = ce }
-
-Expr ssaRead(SsaVariable v, int delta) { result = RU::ssaRead(v, delta) }
-
-predicate guardControlsSsaRead(Guard guard, SsaReadPosition controlled, boolean testIsTrue) {
-  RU::guardControlsSsaRead(guard, controlled, testIsTrue)
+  Guard getComparisonGuard(ComparisonExpr ce) { result = ce }
 }
